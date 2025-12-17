@@ -1,5 +1,5 @@
 # Turing
-Using the libHGT static library, calculates values needed to apply Turing's Method
+Using our **libHGT** static library, calculates values needed to apply Turing's Method
 
 ## Overview
 
