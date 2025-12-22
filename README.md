@@ -6,6 +6,8 @@ Using our **libHGT** static library, calculates values needed to apply Turing's 
 We provide here a C program to calculate the values needed to apply Turing's Method -- used to verify the Riemann Hypothesis up to an ordinate 't' on the critical line.
 The actual calculation work is done by calls to functions in the **libHGT** static library.  The code here is a front end to that calculating code that: (1) gathers the user-requested parameters (via the command line) for the calculations, (2) validates those command line parameters (by calls to the library), (3) passes those parameters to the calculating code in the library), (4) saves the calculated values in local arrays, and (5) prints (to stdout) a report of those calculations.
 
+For a description of the functions available and algorithms used in **libHGT**, see [libHGT.pdf][libHGT-pdf-link].
+
 ## Building the Executable
 
 For Windows 11 users, an executable is included with any release posted on GitHub.
@@ -70,3 +72,4 @@ See their respective links for theirs terms of license.
 [gcc-gnu-link]:			https://gcc.gnu.org/
 [msys2-link]:			https://www.msys2.org/
 [libhgt-link]:			https://github.com/terry98004/libHGT/
+[libHGT-pdf-link]:		https://github.com/terry98004/libHGT/blob/master/libHGT.pdf
