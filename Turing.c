@@ -1,11 +1,11 @@
 // -------------------------------------------------------------------
-// Program last modified October 14, 2025. 
+// Program last modified January 9, 2026. 
 // -------------------------------------------------------------------
 
 /*
 MIT License
 
-Copyright (c) 2025 Terrence P. Murphy
+Copyright (c) 2025-2026 Terrence P. Murphy
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,9 +26,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <quadmath.h>
-#define MPFR_WANT_FLOAT128 1
-
 #include <time.h>
 #include <stdio.h>
 #include <math.h>			
@@ -47,8 +44,8 @@ SOFTWARE.
 
 const char sUsage[] = "Command Line Parameters\n" \
  "-t [positive number]	Location of t along the critical line - this parameter is required. (Digits and '.' only).\n" \
- "-g [positive integer]	Count of the number of Gram intervals to check - between 1 and 16, defaults to 8.\n" \
- "-c [positive integer]	Count of the number of Z(t) values to check in a Gram interval - between 8 and 32, defaults to 8.\n" \
+ "-g [positive integer]	Count of the number of Gram intervals to check - between 1 and 24, defaults to 8.\n" \
+ "-c [positive integer]	Count of the number of Z(t) values to check in a Gram interval - between 8 and 128, defaults to 8.\n" \
  "-p [positive integer]	Decimal point digits of 't values to show in report - between 2 and 60, defaults to 6.\n" \
  "-b [positive integer]	Floating point bits: 128 <= b <= 1024 - defaults to 256.\n" \
  "-d [positive integer]	Used for debugging only.  Please disregard.\n" \

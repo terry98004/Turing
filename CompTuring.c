@@ -1,11 +1,8 @@
 // -------------------------------------------------------------------
-// Program last modified December 9, 2025. 
-// Copyright (c) 2025 Terrence P. Murphy
+// Program last modified January 9, 2026. 
+// Copyright (c) 2025-2026 Terrence P. Murphy
 // MIT License -- see turing.c for details.
 // -------------------------------------------------------------------
-
-#include <quadmath.h>
-#define MPFR_WANT_FLOAT128 1
 
 #include <time.h>
 #include <stdio.h>
@@ -161,7 +158,6 @@ int TuringReport(struct TURING tur)
 int		i, j;
 mpfr_t	Temp1;
 
-
 mpfr_inits2 (hgt_init.DefaultBits, Temp1, (mpfr_ptr) 0);
 
 // -------------------------------------------------------------------
@@ -194,7 +190,7 @@ if(tur.Verbose == true) {
 	}
 
 // -------------------------------------------------------------------
-// We show the 't' and Hardy Z values of the sub-intervals before
+// We show the 't' and Hardy Z values of the sub-interval before
 // the first Gram point.
 // -------------------------------------------------------------------
 mpfr_sub (Temp1, gList[0].Gram, gList[0].lenSubInterval, MPFR_RNDN);

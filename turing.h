@@ -1,7 +1,7 @@
 // -------------------------------------------------------------------
-// Program last modified November 8, 2025. 
-// Copyright (c) 2025 Terrence P. Murphy
-// MIT License -- see ???? for details.
+// Program last modified January 9, 2026. 
+// Copyright (c) 2025-2026 Terrence P. Murphy
+// MIT License -- see turing.c for details.
 // -------------------------------------------------------------------
 
 #define	TUR_HARDY_WIDTH		15
