@@ -18,7 +18,7 @@ For other operating systems, you will need to build the executable, as follows.
 
 *  From [**libHGT**][libhgt-link], you need to: (1) create the **libhgt.a** static library file, and (2) make that library file plus **hgt.h** visible to the **gcc** compiler.
 
-*  Following the build logic in the **maketuring.bat** file, you need to create the necessary 'makefile', in the form that applies to your operating system and the **gcc** compiler.
+*  Following the build logic in the **maketuring.bat** file, we provide a **makefile**, in the form that should work with your operating system and the **gcc** compiler.
 
 You can then build the Turing executable from the provided source files.
 
@@ -34,7 +34,9 @@ This distribution consists of the following files:
  
   * [CompTuring.c][CompTuring-c-link]. This source code file includes the 'ComputeTuring', 'ComputeTuringK' and 'TuringReport' functions, which: (1) call the **libHGT** functions that do the actual calculations, (2) compute the number of Gram segments needed, and (3) print the output reports.
   
-  * [turing.h][turing-h-link]. The is the only (local) include file for the program.  
+  * [turing.h][turing-h-link]. The is the only (local) include file for the program.
+  
+  * [makefile][makefile-link]. This makefile is for use with the make program that is available with most development environments.
   
   * [maketuring.bat][maketuring-bat-link]. The is the "makefile" for the program.  Currently,
   this file is a Windows batch file (**not** an actual makefile), but can be easily converted to 
@@ -67,6 +69,7 @@ See their respective links for theirs terms of license.
 [turing-c-link]:		https://github.com/terry98004/Turing/blob/master/turing.c
 [CompTuring-c-link]:	https://github.com/terry98004/Turing/blob/master/CompTuring.c
 [turing-h-link]:		https://github.com/terry98004/Turing/blob/master/turing.h
+[makefile-link]:	https://github.com/terry98004/Turing/blob/master/makefile
 [maketuring-bat-link]:	https://github.com/terry98004/Turing/blob/master/maketuring.bat
 [mpfr-link]:			https://www.mpfr.org/
 [gcc-gnu-link]:			https://gcc.gnu.org/
