@@ -54,7 +54,7 @@ const char sUsage[] = "Command Line Parameters\n" \
  "-s			Report the total seconds taken to compute the Hardy Z values.\n"\
  "-v			Verbose report (otherwise CSV only)."; 
 
-const char sCopyright[] = "Copyright 2025 by Terrence P. Murphy." \
+const char sCopyright[] = "Copyright 2025-2026 by Terrence P. Murphy." \
 " Licensed under MIT License.\n\n"; 
 
 
