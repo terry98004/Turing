@@ -1,5 +1,5 @@
 // -------------------------------------------------------------------
-// Program last modified January 9, 2026. 
+// Program last modified January 28, 2026. 
 // -------------------------------------------------------------------
 
 /*
@@ -52,7 +52,7 @@ const char sUsage[] = "Command Line Parameters\n" \
  "-k [positive integer]	Number of threads to use - defaults to 1, maximum of 8.\n" \
  "-h			Show command line parameters.  All other parameters will be ignored.\n" \
  "-s			Report the total seconds taken to compute the Hardy Z values.\n"\
- "-v			Verbose report (otherwise CSV only)."; 
+ "-v			Verbose report (provides additional useful information -- highly recommended)."; 
 
 const char sCopyright[] = "Copyright 2025-2026 by Terrence P. Murphy." \
 " Licensed under MIT License.\n\n"; 

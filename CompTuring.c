@@ -1,5 +1,5 @@
 // -------------------------------------------------------------------
-// Program last modified January 9, 2026. 
+// Program last modified January 28, 2026. 
 // Copyright (c) 2025-2026 Terrence P. Murphy
 // MIT License -- see turing.c for details.
 // -------------------------------------------------------------------
@@ -19,8 +19,9 @@
 
 extern struct	HGT_INIT	hgt_init;
 
-struct GRAMLIST	gList[HGT_TUR_GRAM_PTS_MAX + 1];
-
+int    CountZ;   	// number of Z(t) per Gram interval (excluding right endpoint)
+struct GRAMLIST		gList[HGT_TUR_GRAM_PTS_MAX + 1];
+struct HARDYINFO	hInfo[(HGT_TUR_GRAM_PTS_MAX * HGT_TUR_SUBINTVL_MAX) + 2];
 
 // *******************************************************************
 // We 
@@ -28,7 +29,7 @@ struct GRAMLIST	gList[HGT_TUR_GRAM_PTS_MAX + 1];
 int ComputeTuring(struct TURING tur)
 {
 mpfr_t				t, nOfGram, Accuracy, HardyZ, Temp1, Temp2;
-int					i;
+int					i, j, hzNum;
 int					MinusOneToN;
 uint64_t			ui64N;
 
@@ -41,6 +42,7 @@ InitCoeffMPFR(hgt_init.DefaultBits);
 
 
 mpfr_inits2 (hgt_init.DefaultBits, t, nOfGram, Accuracy, HardyZ, Temp1, Temp2, (mpfr_ptr) 0);
+CountZ = tur.CountZ;	// at least for now, save globally for callbacks
 
 // -------------------------------------------------------------------
 // Do an MPFR initialization of the MPFR elemenrts in the GRAMLIST 
@@ -117,16 +119,74 @@ fprintf(stderr, "\n\n");
 mpfr_sub (Temp1, gList[0].Gram, gList[0].lenSubInterval, MPFR_RNDN);
 mpfr_set_ui(Temp2, 1, MPFR_RNDN);
 HardyZWithCount(Temp1, Temp2, 1, 0, HardyZCallbackB);
-HardyZWithCount(gList[tur.CountGram].Gram, Temp2, 1, tur.CountGram, HardyZCallbackC);
+HardyZWithCount(gList[tur.CountGram].Gram, Temp2, 1, tur.CountGram, HardyZCallbackA);
 
 // -------------------------------------------------------------------
-// We now have the information to determine whether out Gram points are 
-// "good" or "bad". We calculate that next.
+// We now have the information to determine whether our Gram points are 
+// "good" or "bad". 
 // -------------------------------------------------------------------
 double	GoodTest;
 for(i=0; i <= tur.CountGram; i++) {
-	GoodTest = gList[i].MinusOneToN * gList[i].HardyZValue[0];
-	gList[i].Good = GoodTest > 0 ? 1 : -1;
+	GoodTest = gList[i].MinusOneToN * hInfo[(i * CountZ) + 1].hzValue;
+	gList[i].Good = GoodTest > 0 ? true : false;
+	}
+
+// -------------------------------------------------------------------
+// With the "good" or "bad" information in hand, we now have the 
+// information needed to determine whether each of our Gram intervals 
+// has an even or odd number of zeros.
+// -------------------------------------------------------------------
+for(i=0; i < tur.CountGram; i++) {
+	gList[i].OddZeros = gList[i].Good == gList[i+1].Good ? true : false;
+	}
+
+// -------------------------------------------------------------------
+// Compute the rise (fall) between computed Hardy Z values. With
+// that, compute whether the interval is moving towards or away
+// from zero.
+// -------------------------------------------------------------------
+hInfo[0].hzRise = 0;
+hzNum = (tur.CountGram * CountZ) + 1;
+for (i = 1; i <= hzNum; i++) {
+	hInfo[i].hzRise     = hInfo[i].hzValue - hInfo[i-1].hzValue;
+	hInfo[i].TowardZero = hInfo[i].hzRise * hInfo[i].hzValue 
+		> 0 ? false : true;
+	}
+
+// -------------------------------------------------------------------
+// Locate all zero crossings between intervals.
+// -------------------------------------------------------------------
+int		idx;
+double	TestCross;
+
+hInfo[0].ZeroCross = hInfo[1].ZeroCross = false;
+for(i=0; i < tur.CountGram; i++) {
+	gList[i].ZerosFound = 0;
+	idx = (i * CountZ) + 2;
+	for(j = 0; j < tur.CountZ; j++) {
+		TestCross = hInfo[idx + j].hzValue * hInfo[idx + j - 1].hzValue;
+		if(TestCross < 0) {
+			hInfo[idx + j].ZeroCross = true;
+			gList[i].ZerosFound += 1;
+			}
+		else {
+			hInfo[idx + j].ZeroCross = false;
+			}
+		}
+	}
+
+// -------------------------------------------------------------------
+// Look for a change in slope that suggests we may be missing a zero
+// crossing. (Or, we have a Lehmer failure).  NOTE: the below
+// setting of hInfo[i].Lehmer works because Lehmer is a bool.
+// -------------------------------------------------------------------
+hInfo[0].Lehmer = false;
+hzNum = (tur.CountGram * CountZ) + 1;
+for (i = 1; i <= hzNum; i++) {
+	hInfo[i].Lehmer =
+		(hInfo[i].TowardZero == false 
+		&& hInfo[i].ZeroCross == false  
+		&& hInfo[i-1].TowardZero == true);
 	}
 
 TuringReport(tur);
@@ -147,14 +207,13 @@ return(1);
 }
 
 
-
 // *******************************************************************
 // This function provides our report of the Gram points and Hardy Z
 // values needed to apply Turing's Method.
 // *******************************************************************
 int TuringReport(struct TURING tur)
 {
-int		i, j;
+int		i, j, idx;
 mpfr_t	Temp1;
 
 mpfr_inits2 (hgt_init.DefaultBits, Temp1, (mpfr_ptr) 0);
@@ -177,13 +236,38 @@ if(tur.Verbose == true) {
 	for(i=0; i <= tur.CountGram; i++) {
 		mpfr_printf("For n = %.0Rf, Gram = %.*Rf, -1^{n} = %2d, Hardy Z = %*.*f, Gram good = %s \n", 
 			gList[i].n, tur.OutputDP, gList[i].Gram, gList[i].MinusOneToN, TUR_HARDY_WIDTH, 
-			TUR_HARDY_DECIMALS, gList[i].HardyZValue[0], gList[i].Good == 1 ? "true" : "false" );						
+			TUR_HARDY_DECIMALS, 
+			hInfo[(i * CountZ) + 1].hzValue, 
+			gList[i].Good == true ? "true" : "false" );						
 		}
 	
 	printf("\nThe Gram interval lengths and sub-interval lengths are as follows:\n\n");
 	for(i=0; i < tur.CountGram; i++) {
 		mpfr_printf("For Gram = %.16Rf, Interval length = %.16Rf, SubInterval len = %.16Rf \n", 
 			gList[i].Gram, gList[i].lenInterval, gList[i].lenSubInterval);
+		}
+
+// -------------------------------------------------------------------
+// Continuing our verbose report, we show the number of zeros located
+// in each Gram interval, and whether that count of zeros per interval 
+// is "as expected" (an even or odd number).
+// -------------------------------------------------------------------
+	char	ExpectOdd[]  = "Missing at least one zero (expected an odd number)";
+	char	ExpectEven[] = "Missing at least one zero (expected an even number)";
+	char	AsExpected[] = "Even/Odd As Expected";
+	char *  Message;
+
+	printf("\n");
+	for(i=0; i < tur.CountGram; i++) {
+		Message = AsExpected;
+		if(gList[i].Good == gList[i+1].Good) {  // so, expecting odd number of zeros
+			if((gList[i].ZerosFound % 2) == 0)	// actual found = even
+			Message = ExpectOdd;
+			}
+		else if((gList[i].ZerosFound % 2) != 0)	{ // expecting even, but actual found = odd
+			Message = ExpectEven;
+			}
+		printf("Gram idx = %d, Zeros Found = %d, %s \n", i, gList[i].ZerosFound, Message);
 		}
 	printf("\nThe requested Turing Method data is as follows:\n\n");
 	}
@@ -194,29 +278,37 @@ if(tur.Verbose == true) {
 // -------------------------------------------------------------------
 mpfr_sub (Temp1, gList[0].Gram, gList[0].lenSubInterval, MPFR_RNDN);
 mpfr_printf("G( 0) -1, %.*Rf, %*.*f \n", tur.OutputDP, Temp1, TUR_HARDY_WIDTH, 
-			TUR_HARDY_DECIMALS, gList[0].HardyZBefore);
+			TUR_HARDY_DECIMALS, hInfo[0].hzValue);
 
 // -------------------------------------------------------------------
 // For the "CountGram" Gram points, we show the 't' and Hardy Z
-// values of the "CountZ" sub-intervals.
+// values of the "CountZ" sub-intervals. We also show: (1) whether 
+// there was a "zero crossing" in the interval, and (2) whether
+// there is a "Lehmer problem".
 // -------------------------------------------------------------------
 for(i=0; i < tur.CountGram; i++) {
 	for(j = 0; j < tur.CountZ; j++) {
 		mpfr_mul_si (Temp1, gList[i].lenSubInterval, j, MPFR_RNDN);
 		mpfr_add (Temp1, gList[i].Gram, Temp1, MPFR_RNDN);
-		mpfr_printf("G(%2d) %2d, %.*Rf, %*.*f \n", i, j, 
+		mpfr_printf("G(%2d) %2d, %.*Rf, %*.*f,  %10.6f, %9s, %7s \n", i, j, 
 			tur.OutputDP, Temp1, TUR_HARDY_WIDTH, TUR_HARDY_DECIMALS, 
-			gList[i].HardyZValue[j]);
+			hInfo[(i * CountZ) + 1 +j ].hzValue,
+			hInfo[(i * CountZ) + 1 +j ].hzRise,
+			hInfo[(i * CountZ) + 1 +j ].ZeroCross == true ? "Crossing" : " ",
+			hInfo[(i * CountZ) + 1 +j ].Lehmer == true ? "Lehmer" : " ");
 		}
 	}
-
 // -------------------------------------------------------------------
-// We show the 't' and Hardy Z values of the Gram point that immediately
-// follows our "CountGram" Gram points.
+// We show the 't' and Hardy Z values (and Crossing / Lehmer info) of 
+//the Gram point that immediately follows our "CountGram" Gram points.
 // -------------------------------------------------------------------	
-mpfr_printf("G(%2d)  0, %.*Rf, %*.*f \n", tur.CountGram, tur.OutputDP, 
+idx = (tur.CountGram * CountZ) + 1;
+mpfr_printf("G(%2d)  0, %.*Rf, %*.*f,  %10.6f, %9s, %7s \n", tur.CountGram, tur.OutputDP, 
 			gList[tur.CountGram].Gram, TUR_HARDY_WIDTH, TUR_HARDY_DECIMALS, 
-			gList[tur.CountGram].HardyZValue[0]);
+			hInfo[idx].hzValue,
+			hInfo[idx].hzRise,
+			hInfo[idx].ZeroCross == true ? "Crossing" : " ",
+			hInfo[idx].Lehmer == true ? "Lehmer" : " ");
 
 mpfr_clears (Temp1, (mpfr_ptr) 0);
 
@@ -258,7 +350,7 @@ return(K);
 
 
 // *******************************************************************
-// Following are the three callback functions passed to and then called 
+// Following are the two callback functions passed to and then called 
 // by the HardyZWithCount library function.
 //
 // NOTE: To avoid the gcc compiler warning "warning unused parameter"
@@ -278,22 +370,15 @@ return(K);
 
 int HardyZCallbackA(mpfr_t t, mpfr_t HardyZ, int i, int CallerID) 
 {
-gList[CallerID].HardyZValue[i] = mpfr_get_d (HardyZ, MPFR_RNDN);
+int	idx = (CallerID * CountZ) + 1 + i;
+hInfo[idx].hzValue = mpfr_get_d (HardyZ, MPFR_RNDN);
 return(1);
 }
 
 
 int HardyZCallbackB(mpfr_t t, mpfr_t HardyZ, int i, int CallerID) 
 {
-gList[CallerID].HardyZBefore = mpfr_get_d (HardyZ, MPFR_RNDN);
-return(1);
-}
-
-
-
-int HardyZCallbackC(mpfr_t t, mpfr_t HardyZ, int i, int CallerID) 
-{
-gList[CallerID].HardyZValue[0] = mpfr_get_d (HardyZ, MPFR_RNDN);
+hInfo[0].hzValue = mpfr_get_d (HardyZ, MPFR_RNDN);
 return(1);
 }
 
@@ -307,3 +392,7 @@ per Keith Thompson:
 int64_t		Var;
 printf("Var = %jd \n", (intmax_t)Var);
 */
+
+// For testing:
+// Lehmer pair: 7005.06266  7005.10056 -- also near 10854395965 and 35615956517
+// Lehmer triplet: 12125271.88276506   12125272.07355435   12125272.2576189 
