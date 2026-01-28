@@ -53,7 +53,7 @@ This distribution consists of the following files:
 *  -k [positive integer]	Number of threads to use - defaults to 1, maximum of 8.
 *  -h			Show command line parameters.  All other parameters will be ignored.
 *  -s			Report the total seconds taken to compute the Hardy Z values.
-*  -v			Verbose report (otherwise CSV only).
+*  -v			Verbose report (provides additional useful information -- highly recommended).
 
 ## Terms of use
 
